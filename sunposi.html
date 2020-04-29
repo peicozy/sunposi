@@ -43,7 +43,7 @@ var aft3 = getsunposi_oneday(date,lat,lng);
 //console.log(aft3);
 
 date = new Date();
-var info = "東京 " + date.getFullYear() +"/"+ (date.getMonth()+1) +"/"+ date.getDate() +" "+ date.getHours() +":"+ date.getMinutes() +" "+  today[get_min2index()].toFixed(1) + "度";
+var info = "東京 " + date.getFullYear() +"/"+ (date.getMonth()+1) +"/"+ date.getDate() +" "+ date.getHours() +":"+ ("0" + date.getMinutes()).slice(-2) +" "+  today[get_min2index()].toFixed(1) + "度";
 document.getElementById("info").innerHTML = info;
 
 
