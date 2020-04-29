@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+　<title>太陽の高さ</title> 
+</head>
+<body>
+  <h3>太陽の高さ</h3>
+  <div id="info">東京　2020/4/29 17:51 +6度</div>
+<canvas id="myLineChart"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<script src="./suncalc.js"></script>
+<script>
+
+function getsunposi_oneday(date,lat,lng)
+{
+  // 日付以外を0時に合わせる
+  date.setHours(0);
+  date.setMinutes(0);
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+
+  var ary = [];
+  // 1分ごとの太陽の高さを取得
+	for(var i=0 ; i<24*60 ; i++){
+		var pos = SunCalc.getPosition(date, lat, lng);
+		ary[i] = pos.altitude  * 180 / Math.PI;
+		date.setMinutes(date.getMinutes() + 1);
+	}
+	return ary;
+}
+var lat = 35.680610; //東京
+var lng = 139.764310;
+var date = new Date();
+var today = getsunposi_oneday(date,lat,lng);
+//console.log(today);
+date.setMonth(date.getMonth() - 3);
+var ago3 = getsunposi_oneday(date,lat,lng);
+//console.log(ago3);
+date.setMonth(date.getMonth() + 6);
+var aft3 = getsunposi_oneday(date,lat,lng);
+//console.log(aft3);
+
+date = new Date();
+var info = "東京 " + date.getFullYear() +"/"+ (date.getMonth()+1) +"/"+ date.getDate() +" "+ date.getHours() +":"+ date.getMinutes() +" "+  today[get_min2index()].toFixed(1) + "度";
+document.getElementById("info").innerHTML = info;
+
+
+// 今日の経過分を返す
+function get_min2index()
+{
+	var d = new Date();
+	return d.getHours() * 60 + d.getMinutes();
+}
+
+
+function getlabel()
+{
+	// 00:00というラベル文字列を得る
+	var ary = [];
+	// 24h = 24*60min = 1440min
+	var date = new Date();// 指定日時の0時にセット
+	date.setHours(0);
+	date.setMinutes(0);
+	date.setSeconds(0);
+	date.setMilliseconds(0);
+
+	var ary = [];
+	for(var i=0 ; i<24*60 ; i++){
+//		ary[i] = date.getMonth()+1 + "/" + date.getDate() + date.getHours() + ":"  + ("0" + date.getMinutes()).slice(-2);
+		ary[i] = date.getHours() + ":"  + ("0" + date.getMinutes()).slice(-2);
+		date.setMinutes(date.getMinutes() + 1);
+	}
+	return ary;
+}
+var l = getlabel();
+
+  var ctx = document.getElementById("myLineChart");
+  var myLineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+		lineAtIndex: get_min2index(),
+      labels: l,
+		datasets: [
+        {
+          label: '今日の太陽の高さ',
+          data: today,
+		  borderColor: "rgba(255,0,0,1)",
+          backgroundColor: "rgba(0,0,0,0)"
+        },
+        {
+          label: '3カ月前',
+          data: ago3,
+          borderColor: "rgba(0,0,127,1)",
+		  backgroundColor: "rgba(0,0,0,0)",
+		  pointRadius:1
+		},
+        {
+          label: '3カ月後',
+          data: aft3,
+          borderColor: "rgba(0,0,255,1)",
+          backgroundColor: "rgba(0,0,0,0)",
+		  pointRadius:1
+		}
+      ],
+    },
+    options: {
+      title: {
+        display: true,
+        text: '太陽の高さ'
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            suggestedMax: 100,
+            suggestedMin: -100,
+            stepSize: 10,
+            callback: function(value, index, values){
+              return  value.toFixed(1) +  '度'
+              //return  value. +  '度'
+            }
+          }
+        }]
+      },
+    }
+  });
+
+
+
+
+/*
+垂直の補助線を引く
+*/
+  var originalLineDraw = Chart.controllers.line.prototype.draw;
+	Chart.helpers.extend(Chart.controllers.line.prototype, {
+  draw: function() {
+    originalLineDraw.apply(this, arguments);
+
+    var chart = this.chart;
+    var ctx = chart.chart.ctx;
+
+    var index = chart.config.data.lineAtIndex;
+    if (index) {
+      var xaxis = chart.scales['x-axis-0'];
+      var yaxis = chart.scales['y-axis-0'];
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(xaxis.getPixelForValue(undefined, index), yaxis.top);
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineTo(xaxis.getPixelForValue(undefined, index), yaxis.bottom);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+});
+
+
+  </script>
+</body>
+
+</html>
